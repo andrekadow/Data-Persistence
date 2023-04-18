@@ -59,6 +59,10 @@ public class MainManager : MonoBehaviour
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                SceneManager.LoadScene(0);
+            }
         }
     }
 
