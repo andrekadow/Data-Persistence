@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
+using TMPro;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 
 public class MainManager : MonoBehaviour
 {
@@ -18,10 +24,21 @@ public class MainManager : MonoBehaviour
     
     private bool m_GameOver = false;
 
-    
+    public int highScore = 0;
+    [SerializeField] private Text highScoreText;
+    public TMP_InputField recordName;
+    public Text recordNameText;
+    [SerializeField] private GameObject holder;
+    public string theString;
+
+
+
+
     // Start is called before the first frame update
     void Start()
     {
+        LoadScore();
+        
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -66,6 +83,13 @@ public class MainManager : MonoBehaviour
         }
     }
 
+    [System.Serializable]
+    class SaveData
+    {
+        public int highScore;
+        public string recordName;
+    }
+
     void AddPoint(int point)
     {
         m_Points += point;
@@ -76,5 +100,54 @@ public class MainManager : MonoBehaviour
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+
+        if (m_Points > highScore)
+        {
+            holder.SetActive(true);
+        }
+    }
+
+    public void SaveScoreRestart()
+    {
+        
+        Debug.Log("saved");
+        SaveData data = new SaveData();
+        data.highScore = m_Points;
+
+        string json = JsonUtility.ToJson(data);
+
+        File.WriteAllText(Application.persistentDataPath + "/highscore.json", json);
+        SceneManager.LoadScene(1);
+    }
+
+    public void SaveScoreExit()
+    {
+        string myText = recordName.text;
+        SaveData data = new SaveData();
+        data.highScore = m_Points;
+        data.recordName = myText;
+
+        string json = JsonUtility.ToJson(data);
+
+        File.WriteAllText(Application.persistentDataPath + "/highscore.json", json);
+#if UNITY_EDITOR
+        EditorApplication.ExitPlaymode();
+#else
+        Application.Quit(); // original code to quit Unity player
+#endif
+    }
+
+    public void LoadScore()
+    {
+        string path = Application.persistentDataPath + "/highscore.json";
+        if (File.Exists(path))
+        {
+            string json = File.ReadAllText(path);
+            SaveData data = JsonUtility.FromJson<SaveData>(json);
+
+            highScore = data.highScore;
+            theString = data.recordName;
+            highScoreText.text = $"Best Score : {theString} : {highScore}";
+        }
     }
 }
